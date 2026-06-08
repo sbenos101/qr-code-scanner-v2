@@ -4,11 +4,19 @@
 
 document.addEventListener("DOMContentLoaded", function () {
 
+  const PRIZE_PATH   = "/trade-show-incentive-grand-prize";
+  const MILESTONES   = [10, 15, 20, 25];
+  const CONTINUE_TXT = "Thank you for your continued participation in our Trade Show Incentive Scheme. Submit another entry for an additional chance to win our Grand Prize.";
+
   const DAY_COUNTS = {
     "2026-09-08": { label: "Tuesday",   count: 15 },
     "2026-09-09": { label: "Wednesday", count: 13 },
     "2026-09-10": { label: "Thursday",  count: 17 },
   };
+
+  if (document.referrer && document.referrer.indexOf(PRIZE_PATH) !== -1) {
+    try { localStorage.setItem("prizeBtnHidden", "1"); } catch (e) {}
+  }
 
   function updateSupplierTotal() {
     const totalEl = document.getElementById("supplier-total");
@@ -75,6 +83,46 @@ document.addEventListener("DOMContentLoaded", function () {
   if (localStorage.getItem("prizeUnlocked") === "1") {
     document.getElementById("ts-prize-wrap").style.display = "block";
   }
+  if (localStorage.getItem("prizeBtnHidden") === "1") {
+    document.getElementById("ts-prize-wrap").style.display = "none";
+  }
+
+  let continueModal = null;
+  (function buildContinueModal() {
+    const base = document.getElementById("trade-show-modal");
+    if (!base) return;
+    continueModal = base.cloneNode(true);
+    continueModal.id = "trade-show-modal-continue";
+    continueModal.classList.remove("open");
+
+    const paras = continueModal.querySelectorAll(".ts-modal-content p");
+    if (paras[0]) paras[0].textContent = CONTINUE_TXT;
+    if (paras[1]) paras[1].remove();
+
+    const closeBtn = continueModal.querySelector(".ts-close");
+    if (closeBtn) closeBtn.id = "ts-close-continue";
+
+    const cta = continueModal.querySelector(".ts-modal-cta");
+    if (cta) cta.id = "ts-modal-cta-continue";
+
+    document.body.appendChild(continueModal);
+
+    function closeContinue() { continueModal.classList.remove("open"); }
+    if (closeBtn) closeBtn.addEventListener("click", closeContinue);
+    continueModal.addEventListener("click", function (e) {
+      if (e.target === continueModal) closeContinue();
+    });
+
+    if (cta) {
+      cta.addEventListener("click", function () {
+        localStorage.removeItem("prizeBtnHidden");
+      });
+    }
+  })();
+
+  function openContinueModal() {
+    if (continueModal) continueModal.classList.add("open");
+  }
 
   const qrScanner = new Html5Qrcode("qr-reader");
 
@@ -117,6 +165,9 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.setItem("prizeUnlocked", "1");
         document.getElementById("ts-prize-wrap").style.display = "block";
       }, 600);
+    }
+    if (MILESTONES.indexOf(scanCount) !== -1) {
+      setTimeout(openContinueModal, 600);
     }
   }
 
