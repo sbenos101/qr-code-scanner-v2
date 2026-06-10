@@ -14,10 +14,6 @@ document.addEventListener("DOMContentLoaded", function () {
     "2026-09-10": { label: "Thursday",  count: 17 },
   };
 
-  if (document.referrer && document.referrer.indexOf(PRIZE_PATH) !== -1) {
-    try { localStorage.setItem("prizeBtnHidden", "1"); } catch (e) {}
-  }
-
   function updateSupplierTotal() {
     const totalEl = document.getElementById("supplier-total");
     if (!totalEl) return;
@@ -55,6 +51,30 @@ document.addEventListener("DOMContentLoaded", function () {
     localStorage.setItem("scanCount", scanCount);
   }
 
+  function applyPrizeState() {
+    const wrap = document.getElementById("ts-prize-wrap");
+    if (!wrap) return;
+    const unlocked = localStorage.getItem("prizeUnlocked") === "1";
+    const hidden   = localStorage.getItem("prizeBtnHidden") === "1";
+    wrap.style.display = (unlocked && !hidden) ? "block" : "none";
+  }
+
+  function syncModalFromFlag() {
+    if (localStorage.getItem("modalVisible") === "1") modal.classList.add("open");
+    else modal.classList.remove("open");
+  }
+
+  function markPrizeEntered() {
+    localStorage.setItem("prizeBtnHidden", "1");
+    localStorage.removeItem("modalVisible");
+  }
+
+  document.addEventListener("click", function (e) {
+    if (e.target.closest('a[href$="' + PRIZE_PATH + '"]')) {
+      markPrizeEntered();
+    }
+  });
+
   function renderTable() {
     const tbody = document.querySelector("#supplier-log tbody");
     tbody.innerHTML = "";
@@ -77,15 +97,8 @@ document.addEventListener("DOMContentLoaded", function () {
   renderTable();
   updateSupplierTotal();
 
-  if (localStorage.getItem("modalVisible") === "1") {
-    modal.classList.add("open");
-  }
-  if (localStorage.getItem("prizeUnlocked") === "1") {
-    document.getElementById("ts-prize-wrap").style.display = "block";
-  }
-  if (localStorage.getItem("prizeBtnHidden") === "1") {
-    document.getElementById("ts-prize-wrap").style.display = "none";
-  }
+  syncModalFromFlag();
+  applyPrizeState();
 
   let continueModal = null;
   (function buildContinueModal() {
@@ -112,16 +125,13 @@ document.addEventListener("DOMContentLoaded", function () {
     continueModal.addEventListener("click", function (e) {
       if (e.target === continueModal) closeContinue();
     });
-
-    if (cta) {
-      cta.addEventListener("click", function () {
-        localStorage.removeItem("prizeBtnHidden");
-      });
-    }
   })();
 
   function openContinueModal() {
-    if (continueModal) continueModal.classList.add("open");
+    if (!continueModal) return;
+    localStorage.removeItem("prizeBtnHidden");
+    applyPrizeState();
+    continueModal.classList.add("open");
   }
 
   const qrScanner = new Html5Qrcode("qr-reader");
@@ -150,6 +160,23 @@ document.addEventListener("DOMContentLoaded", function () {
     container.appendChild(overlay);
   }
 
+  function showCameraError() {
+    const container = document.getElementById("qr-container");
+    const overlay   = document.getElementById("qr-overlay");
+    if (overlay) overlay.remove();
+    if (!container || document.getElementById("qr-cam-error")) return;
+
+    const msg = document.createElement("div");
+    msg.id = "qr-cam-error";
+    msg.style.cssText = "padding:28px 20px;text-align:center;background:#fff;color:#232323;border-bottom:1px solid #e8ede9;";
+    msg.innerHTML =
+      '<p style="font-weight:700;font-size:15px;margin-bottom:8px;">Camera access required</p>' +
+      '<p style="font-size:13px;color:#6b7280;line-height:1.5;">Please allow camera access when prompted, or check your browser settings.</p>';
+
+    container.insertAdjacentElement("afterend", msg);
+    container.style.display = "none";
+  }
+
   function onScan(decodedText) {
     if (scannedSuppliers.some(e => e.supplier === decodedText)) return;
     scanCount++;
@@ -163,7 +190,7 @@ document.addEventListener("DOMContentLoaded", function () {
         modal.classList.add("open");
         localStorage.setItem("modalVisible", "1");
         localStorage.setItem("prizeUnlocked", "1");
-        document.getElementById("ts-prize-wrap").style.display = "block";
+        applyPrizeState();
       }, 600);
     }
     if (MILESTONES.indexOf(scanCount) !== -1) {
@@ -183,15 +210,7 @@ document.addEventListener("DOMContentLoaded", function () {
       { facingMode: "environment" },
       { fps: 10, qrbox: qrBoxSize, aspectRatio: 1.0 },
       onScan
-    ).catch(() => {
-      const reader = document.getElementById("qr-reader");
-      if (reader) {
-        reader.innerHTML = '<div style="padding:24px;text-align:center;background:#fff;color:#232323;">' +
-          '<p style="font-weight:700;font-size:15px;margin-bottom:8px;">Camera access required</p>' +
-          '<p style="font-size:13px;color:#6b7280;line-height:1.5;">Please allow camera access when prompted, or check your browser settings.</p>' +
-          '</div>';
-      }
-    });
+    ).catch(showCameraError);
   });
 
   function closeModal() {
@@ -200,9 +219,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   document.getElementById("ts-close").addEventListener("click", closeModal);
   modal.addEventListener("click", function(e) { if (e.target === modal) closeModal(); });
-  document.getElementById("ts-modal-cta").addEventListener("click", function () {
-    localStorage.setItem("modalVisible", "1");
-  });
 
   let lastToggleTime = 0;
   function toggleDay(day) {
@@ -271,6 +287,12 @@ document.addEventListener("DOMContentLoaded", function () {
       if (scroll.scrollLeft > max) scroll.scrollLeft = max;
       updateArrows(day);
     }, { passive: true });
+  });
+
+  window.addEventListener("pageshow", function () {
+    applyPrizeState();
+    syncModalFromFlag();
+    if (continueModal) continueModal.classList.remove("open");
   });
 
 });
