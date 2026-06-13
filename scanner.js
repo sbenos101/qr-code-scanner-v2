@@ -9,9 +9,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const CONTINUE_TXT = "Thank you for your continued participation in our Trade Show Incentive Scheme. Submit another entry for an additional chance to win our Grand Prize.";
 
   const DAY_COUNTS = {
-    "2026-09-08": { label: "Tuesday",   count: 22 },
-    "2026-09-09": { label: "Wednesday", count: 18 },
-    "2026-09-10": { label: "Thursday",  count: 18 },
+    "2026-09-08": { label: "Tuesday",   count: 28 },
+    "2026-09-09": { label: "Wednesday", count: 23 },
+    "2026-09-10": { label: "Thursday",  count: 23 },
   };
 
   function updateSupplierTotal() {
