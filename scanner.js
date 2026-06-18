@@ -10,8 +10,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const DAY_COUNTS = {
     "2026-09-08": { label: "Tuesday",   count: 33 },
-    "2026-09-09": { label: "Wednesday", count: 29 },
-    "2026-09-10": { label: "Thursday",  count: 27 },
+    "2026-09-09": { label: "Wednesday", count: 30 },
+    "2026-09-10": { label: "Thursday",  count: 26 },
   };
 
   function updateSupplierTotal() {
