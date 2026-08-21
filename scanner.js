@@ -138,7 +138,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function qrBoxSize() {
     const container = document.getElementById("qr-container");
-    const size = Math.floor(Math.min(container.offsetWidth, container.offsetHeight) * 0.72);
+    const size = Math.floor(Math.min(container.offsetWidth, container.offsetHeight) * 0.9);
     return { width: size, height: size };
   }
 
@@ -177,6 +177,17 @@ document.addEventListener("DOMContentLoaded", function () {
     container.style.display = "none";
   }
 
+  let lockTimer;
+  function pulseFrame() {
+    const frame = document.getElementById("qr-overlay-inner");
+    if (!frame) return;
+    clearTimeout(lockTimer);
+    frame.classList.remove("locked");
+    void frame.offsetWidth;
+    frame.classList.add("locked");
+    lockTimer = setTimeout(() => frame.classList.remove("locked"), 500);
+  }
+
   function onScan(decodedText) {
     if (scannedSuppliers.some(e => e.supplier === decodedText)) return;
     scanCount++;
@@ -184,6 +195,7 @@ document.addEventListener("DOMContentLoaded", function () {
     bumpCounter();
     renderTable();
     persist();
+    pulseFrame();
     showToast("✓ Scanned: " + decodedText, true);
     if (scanCount === 5) {
       setTimeout(() => {
@@ -200,7 +212,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   qrScanner.start(
     { facingMode: { exact: "environment" } },
-    { fps: 10, qrbox: qrBoxSize, aspectRatio: 1.0 },
+    { fps: 10, qrbox: qrBoxSize, disableFlip: true },
     onScan
   ).then(() => {
     setTimeout(injectOverlay, 400);
@@ -208,7 +220,7 @@ document.addEventListener("DOMContentLoaded", function () {
     injectOverlay();
     qrScanner.start(
       { facingMode: "environment" },
-      { fps: 10, qrbox: qrBoxSize, aspectRatio: 1.0 },
+      { fps: 10, qrbox: qrBoxSize, disableFlip: true },
       onScan
     ).catch(showCameraError);
   });
