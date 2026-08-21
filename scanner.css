@@ -10,17 +10,20 @@ div:has(#btn-cookie-allow), div:has(#btn-cookie-deny), div:has(#btn-cookie-custo
 @keyframes sawSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 #qr-container { position: relative; width: 100%; aspect-ratio: 1 / 1; max-height: 420px; overflow: hidden; background: #000; }
 #qr-reader { width: 100%; height: 100%; overflow: hidden; background: #000; position: relative; z-index: 1; }
-#qr-overlay { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
-#qr-overlay-inner { position: relative; width: min(220px, 58vw); height: min(220px, 58vw); }
-#qr-overlay-inner::before { content: ""; position: absolute; inset: 0; box-shadow: 0 0 0 200vmax rgba(0,0,0,0.60); border-radius: 2px; pointer-events: none; }
-.qr-corner { position: absolute; width: 22px; height: 22px; border-color: #009845; border-style: solid; }
+#qr-overlay { position: absolute; inset: 0; z-index: 10; --qr-frame: min(220px, 58vw); --qr-hint-gap: 24px; --qr-offset: 22px; pointer-events: none; }
+#qr-overlay::before { content: ""; position: absolute; top: calc(50% + var(--qr-offset)); left: 50%; width: var(--qr-frame); height: var(--qr-frame); margin: calc(var(--qr-frame) / -2) 0 0 calc(var(--qr-frame) / -2); box-shadow: 0 0 0 200vmax rgba(0,0,0,0.60); border-radius: 2px; pointer-events: none; z-index: 0; }
+#qr-overlay-inner { position: absolute; top: calc(50% + var(--qr-offset)); left: 50%; width: var(--qr-frame); height: var(--qr-frame); margin: calc(var(--qr-frame) / -2) 0 0 calc(var(--qr-frame) / -2); z-index: 1; }
+.qr-corner { position: absolute; width: 22px; height: 22px; border-color: #009845; border-style: solid; transition: border-color 0.15s ease; }
 .qr-tl { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 3px 0 0 0; }
 .qr-tr { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 3px 0 0; }
 .qr-bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 3px; }
 .qr-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 3px 0; }
+#qr-overlay-inner.locked .qr-corner { border-color: #ffffff; }
+#qr-overlay-inner.locked::after { content: ""; position: absolute; inset: -6px; border: 2px solid #009845; border-radius: 6px; animation: qrLock 0.5s ease-out; pointer-events: none; }
+@keyframes qrLock { 0% { opacity: 0; transform: scale(1.15); } 40% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
 #qr-scan-line { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(to right, transparent, #009845 30%, #009845 70%, transparent); box-shadow: 0 0 6px #009845; animation: scanMove 9s linear infinite; top: 0; }
 @keyframes scanMove { 0% { top: 0; opacity: 0; } 3.3% { opacity: 1; } 30% { top: calc(100% - 2px); opacity: 1; } 33.3% { opacity: 0; } 100% { top: calc(100% - 2px); opacity: 0; } }
-#qr-hint { color: rgba(255,255,255,0.9); font-size: 16px; font-weight: 700; margin-bottom: 16px; text-align: center; padding: 0 12px; position: relative; z-index: 20; }
+#qr-hint { position: absolute; left: 0; right: 0; bottom: calc(50% + (var(--qr-frame) / 2) + var(--qr-hint-gap) - var(--qr-offset)); color: rgba(255,255,255,0.9); font-size: 15px; font-weight: 700; margin: 0; text-align: center; padding: 0 12px; z-index: 2; }
 #qr-reader video { width: 100% !important; height: 100% !important; object-fit: cover; display: block; }
 #qr-reader > * { border: none !important; }
 #qr-reader__scan_region { background: #000; }
